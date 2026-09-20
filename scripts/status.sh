@@ -9,7 +9,9 @@ source "$(dirname "$0")/common.sh"
 echo "================ BEDROCK STATUS ================"
 echo "Versão instalada : $(installed_version)"
 if server_running; then echo "Servidor       : ONLINE"; else echo "Servidor       : OFFLINE"; fi
-echo "Mundo          : $(level_name) ($(du -sh "$BEDROCK_DIR/worlds/$(level_name)" 2>/dev/null | cut -f1 || echo '?'))"
+WSIZE="$(du -sh "$BEDROCK_DIR/worlds/$(level_name)" 2>/dev/null | cut -f1)"
+[ -z "$WSIZE" ] && WSIZE="(mundo ainda não gerado)"
+echo "Mundo          : $(level_name) ($WSIZE)"
 echo "Packs          : $(find "$BEDROCK_DIR/behavior_packs" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l) BP / $(find "$BEDROCK_DIR/resource_packs" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l) RP"
 if [ -f "$TUNNEL_DIR/tunnel-info.txt" ]; then
   # shellcheck disable=SC1090

@@ -1,0 +1,48 @@
+# CI: valida scripts (selftest) + instala o BDS REAL da fonte oficial e testa o boot.
+name: validate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependências de teste
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq tmux jq unzip curl python3 zip
+      - name: selftest.sh
+        run: timeout 300 bash scripts/selftest.sh
+
+  bedrock-boot:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar BDS (fonte oficial)
+        run: bash scripts/install.sh
+      - name: Boot direto (gera mundo, fica de pé)
+        run: |
+          cd bedrock-server
+          export LD_LIBRARY_PATH="$PWD"
+          set +e
+          timeout 150 ./bedrock_server > /tmp/boot.log 2>&1
+          code=$?
+          set -e
+          tail -n 30 /tmp/boot.log
+          if [ "$code" -ne 124 ]; then echo "❌ bedrock saiu sozinho (código $code)"; exit 1; fi
+          grep -qi "server started" /tmp/boot.log || { echo "❌ sem 'Server started' no log"; exit 1; }
+          echo "✅ BOOT OK"
+      - name: Ciclo start/status/stop/backup
+        run: |
+          ./scripts/start.sh --background
+          sleep 20
+          ./scripts/status.sh
+          ./scripts/stop.sh
+          ./scripts/backup.sh
+          ls -la backups/

@@ -50,6 +50,16 @@ else
   log "Todas as dependências já estão instaladas."
 fi
 
+# libcurl do sistema (o binário precisa dela; nome varia por versão do Ubuntu)
+if command -v apt-get >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
+  if ! ldconfig -p 2>/dev/null | grep -q libcurl; then
+    log "Instalando libcurl do sistema (melhor esforço)..."
+    sudo apt-get install -y -qq libcurl4 2>/dev/null \
+      || sudo apt-get install -y -qq libcurl4t64 2>/dev/null \
+      || warn "não consegui instalar libcurl via apt — se o boot falhar, instale manualmente."
+  fi
+fi
+
 log "== Etapa 4/5: criando estrutura de pastas =="
 mkdir -p "$BEDROCK_DIR/worlds" "$BEDROCK_DIR/behavior_packs" \
          "$BEDROCK_DIR/resource_packs" "$BACKUP_DIR" "$TUNNEL_DIR"

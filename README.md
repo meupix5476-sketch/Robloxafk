@@ -11,6 +11,7 @@ para ~5 jogadores, com suporte a addons pesados (Behavior + Resource Packs).
 tmux attach -t mc-bedrock     # ver console ao vivo (sair: Ctrl+B, D)
 ./scripts/stop.sh             # para com segurança (salva o mundo)
 ./scripts/status.sh           # RAM, disco, CPU, túnel, erros
+./scripts/selftest.sh         # bateria de testes (seguro, usa /tmp)
 ```
 
 ## 🌐 Entrar pelo celular (Bedrock → Servidores → Adicionar servidor)
