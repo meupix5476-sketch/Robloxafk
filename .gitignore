@@ -1,0 +1,50 @@
+# === Binários do Bedrock (baixados no setup, ~50-100MB) ===
+bedrock-server/bedrock_server
+bedrock-server/*.so
+bedrock-server/*.pdb
+bedrock-server/*.zip
+bedrock-server/VERSION
+bedrock-server/*.log
+bedrock-server/bedrock-server.pid
+bedrock-server/logs/
+bedrock-server/config/
+bedrock-server/development_behavior_packs/
+bedrock-server/development_resource_packs/
+bedrock-server/development_skin_packs/
+bedrock-server/preview_*
+
+# === Mundos e addons (grandes, vivem no volume do Codespace) ===
+bedrock-server/worlds/*/
+!bedrock-server/worlds/.gitkeep
+bedrock-server/behavior_packs/*/
+!bedrock-server/behavior_packs/.gitkeep
+bedrock-server/resource_packs/*/
+!bedrock-server/resource_packs/.gitkeep
+
+# (server.properties, permissions.json e allowlist.json FICAM no git de propósito)
+
+# === Backups ===
+backups/*.tar.gz
+backups/*.zip
+
+# === Túnel playit (binários + SECRET — nunca commitar!) ===
+tunnel/bin/
+tunnel/playit.toml
+tunnel/.playit-secret
+tunnel/*.log
+tunnel/*.out
+tunnel/*.sock
+tunnel/*.pid
+tunnel/tunnel-info.txt
+
+# === Painel web ===
+ui/.token
+ui/*.pid
+ui/*.log
+ui/uploads/
+
+# === Gerais ===
+.env
+*.tmp
+*~
+.DS_Store

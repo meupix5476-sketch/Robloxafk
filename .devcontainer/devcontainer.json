@@ -1,0 +1,34 @@
+{
+  // Codespace pronto para Bedrock Dedicated Server (Linux x86_64).
+  // O setup roda UMA vez na criação (onCreateCommand) e é idempotente:
+  // nunca apaga mundo, addons ou configs.
+  "name": "Modded Crafters — Bedrock Server",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  // Rebuilds/recriações do container re-executam o install de forma segura.
+  "onCreateCommand": "bash scripts/install.sh",
+
+  // A cada "start" do Codespace, só mostra o lembrete (não auto-inicia nada).
+  "postStartCommand": "echo '--- Modded Crafters ---' && echo 'Iniciar: ./scripts/start.sh        | Console: tmux attach -t mc-bedrock' && echo 'Túnel:   ./scripts/tunnel.sh setup | Status:  ./scripts/status.sh'",
+
+  // ATENÇÃO: o Codespaces só encaminha TCP/HTTP(S). O Bedrock usa UDP/19132,
+  // que NÃO funciona pelo encaminhamento nativo — use ./scripts/tunnel.sh setup
+  // (playit.gg) para jogar pelo celular. A porta abaixo é só documentação.
+  "forwardPorts": [19132, 8080],
+  "portsAttributes": {
+    "19132": {
+      "label": "Bedrock UDP (requer túnel playit.gg)",
+      "onAutoForward": "ignore"
+    },
+    "8080": {
+      "label": "Painel web (./scripts/ui.sh start)",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": []
+    }
+  }
+}
