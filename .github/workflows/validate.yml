@@ -1,4 +1,5 @@
 # CI: valida scripts (selftest) + instala o BDS REAL da fonte oficial e testa o boot.
+# Versões travadas de propósito (ubuntu-latest migra p/ Ubuntu 26 em out/2026).
 name: validate
 
 on:
@@ -8,9 +9,9 @@ on:
 
 jobs:
   selftest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Dependências de teste
         run: sudo apt-get update -qq && sudo apt-get install -y -qq tmux jq unzip curl python3 zip
       - name: selftest.sh
@@ -20,10 +21,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-latest]
+        os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Instalar BDS (fonte oficial)
         run: bash scripts/install.sh
       - name: Boot direto (gera mundo, fica de pé)
@@ -43,6 +44,7 @@ jobs:
           ./scripts/start.sh --background
           sleep 20
           ./scripts/status.sh
+          ./scripts/cmd.sh 'say CI online!'
           ./scripts/stop.sh
           ./scripts/backup.sh
           ls -la backups/

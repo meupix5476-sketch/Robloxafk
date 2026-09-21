@@ -37,6 +37,12 @@ tunnel/*.sock
 tunnel/*.pid
 tunnel/tunnel-info.txt
 
+# === Painel web ===
+ui/.token
+ui/*.pid
+ui/*.log
+ui/uploads/
+
 # === Gerais ===
 .env
 *.tmp

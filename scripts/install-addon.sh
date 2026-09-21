@@ -95,8 +95,9 @@ def classify(manifest):
 
 def find_pack_roots(tree: Path):
     """Acha pastas contendo manifest.json (1 nível de zips aninhados incluso)."""
-    # desempacota .mcpack/.zip aninhados (comum dentro de .mcaddon)
-    for nested in sorted(tree.rglob("*.mcpack")) + sorted(tree.rglob("*.zip")):
+    # desempacota .mcpack/.mcaddon/.zip aninhados (comum dentro de .mcaddon)
+    nested_packs = sorted(tree.rglob("*.mcpack")) + sorted(tree.rglob("*.mcaddon")) + sorted(tree.rglob("*.zip"))
+    for nested in nested_packs:
         try:
             dest = nested.parent / (nested.stem + "__nested")
             if dest.exists(): continue

@@ -24,6 +24,7 @@ log "Montando palco de testes em $STAGE ..."
 mkdir -p "$STAGE/bedrock-server/worlds" "$STAGE/bedrock-server/behavior_packs" \
          "$STAGE/bedrock-server/resource_packs" "$STAGE/backups" "$STAGE/tunnel"
 cp -r "$ROOT_DIR/scripts" "$STAGE/scripts"
+cp -r "$ROOT_DIR/ui" "$STAGE/ui" 2>/dev/null || mkdir -p "$STAGE/ui"
 cp "$PROPS_FILE" "$BEDROCK_DIR/permissions.json" "$BEDROCK_DIR/allowlist.json" \
    "$STAGE/bedrock-server/" 2>/dev/null || die "templates de config sumiram?"
 S="$STAGE/scripts"  # atalho
@@ -166,6 +167,19 @@ EOF
     else
       fail "background não subiu"; cat "$STAGE/o7.log" "$STAGE/bedrock-server/server.log" 2>/dev/null
     fi
+    # 8b. cmd com servidor ONLINE (com tmux envia; sem tmux falha com graça)
+    if have_tmux && tmux has-session -t "$MC_SESSION" 2>/dev/null; then
+      "$S/cmd.sh" "say selftest" >"$STAGE/o7b.log" 2>&1 \
+        && pass "cmd.sh enviou comando (tmux)" \
+        || { fail "cmd.sh falhou com tmux"; cat "$STAGE/o7b.log"; }
+    else
+      if "$S/cmd.sh" "say selftest" >"$STAGE/o7b.log" 2>&1; then
+        fail "cmd.sh deveria falhar sem tmux"
+      else
+        grep -q "sem console" "$STAGE/o7b.log" && pass "cmd.sh falhou com graça (sem tmux)" \
+          || { fail "cmd.sh sem tmux: msg inesperada"; cat "$STAGE/o7b.log"; }
+      fi
+    fi
     if "$S/stop.sh" >"$STAGE/o8.log" 2>&1; then
       sleep 1
       if [ -n "${STAGE_PID:-}" ] && kill -0 "$STAGE_PID" 2>/dev/null; then
@@ -195,7 +209,35 @@ else
 fi
 
 echo ""
-echo "### 10. URL oficial do Bedrock (rede) ###"
+echo "### 10. cmd com servidor OFFLINE ###"
+if server_running; then
+  skip "servidor REAL rodando — teste de cmd offline pulado"
+elif "$S/cmd.sh" "say oi" >"$STAGE/o10.log" 2>&1; then
+  fail "cmd.sh deveria falhar com servidor offline"
+else
+  grep -q "OFFLINE" "$STAGE/o10.log" && pass "cmd.sh recusou com graça (offline)" \
+    || { fail "cmd.sh offline: msg inesperada"; cat "$STAGE/o10.log"; }
+fi
+
+echo ""
+echo "### 11. Restore (ida e volta) ###"
+LATEST="$(ls -1t "$STAGE"/backups/world-*.tar.gz 2>/dev/null | head -n1)"
+if [ -z "${LATEST:-}" ]; then
+  fail "sem backup no palco para restaurar"
+else
+  rm -rf "$STAGE/bedrock-server/worlds/Survival"
+  if "$S/restore.sh" "$LATEST" --yes >"$STAGE/o11.log" 2>&1 \
+     && [ -f "$STAGE/bedrock-server/worlds/Survival/world_behavior_packs.json" ]; then
+    pass "restore reconstruiu o mundo"
+  else
+    fail "restore falhou"; cat "$STAGE/o11.log"
+  fi
+  "$S/restore.sh" --list >"$STAGE/o11b.log" 2>&1 && grep -q "world-" "$STAGE/o11b.log" \
+    && pass "restore --list" || { fail "restore --list"; cat "$STAGE/o11b.log"; }
+fi
+
+echo ""
+echo "### 12. URL oficial do Bedrock (rede) ###"
 URL="$(bedrock_download_url)"
 if [ -z "$URL" ]; then
   skip "sem internet p/ minecraft.net neste ambiente (no CI/Codespace valida de verdade)"
@@ -204,6 +246,25 @@ elif echo "$URL" | grep -q "bin-linux.*\.zip"; then
 else
   fail "URL inesperada: $URL"
 fi
+
+echo ""
+echo "### 13. Painel web (UI) ###"
+export UI_PORT=18081
+if "$S/ui.sh" start >"$STAGE/o13.log" 2>&1; then
+  sleep 1
+  TOKEN="$(cat "$STAGE/ui/.token" 2>/dev/null || echo)"
+  if [ -n "$TOKEN" ] && curl -fsS --max-time 10 "http://127.0.0.1:18081/api/status?token=$TOKEN" 2>/dev/null | grep -q '"online"'; then
+    pass "UI responde /api/status"
+  else
+    fail "UI não respondeu"; cat "$STAGE/o13.log"
+  fi
+  CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://127.0.0.1:18081/api/status" 2>/dev/null || echo 000)"
+  [ "$CODE" = "403" ] && pass "UI bloqueia sem token (403)" || fail "UI sem token retornou $CODE (esperado 403)"
+else
+  fail "ui.sh start falhou"; cat "$STAGE/o13.log"
+fi
+"$S/ui.sh" stop >/dev/null 2>&1 || true
+unset UI_PORT
 
 echo ""
 echo "=========================================="

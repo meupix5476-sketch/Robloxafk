@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>⛏️ Modded Crafters — Painel</title>
+<style>
+:root{--bg:#0f1419;--card:#1a2230;--line:#2c3a4f;--txt:#e8eef5;--dim:#9fb0c3;
+--grn:#3fd67c;--red:#ff5d5d;--yel:#ffc857;--blu:#4da3ff;--btn:#2b3b52}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);
+font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;
+gap:12px;align-items:center;flex-wrap:wrap;background:#131a24}
+header h1{font-size:18px;margin:0}
+.pill{padding:4px 12px;border-radius:20px;font-weight:700;font-size:13px}
+.on{background:#0c3a22;color:var(--grn)}.off{background:#3a0c0c;color:var(--red)}
+.ver{color:var(--dim);font-size:13px}
+main{padding:16px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
+max-width:1200px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--dim);text-transform:uppercase;
+letter-spacing:.5px}
+.big{font-size:15px;margin:6px 0;word-break:break-all}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{background:var(--btn);color:var(--txt);border:1px solid var(--line);
+border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer}
+button:hover{filter:brightness(1.25)}button:disabled{opacity:.45;cursor:wait}
+button.go{background:#0e4d2a;border-color:#1d7a45}button.stop{background:#5a1414;
+border-color:#8a2323}button.warn{background:#4d3a0e;border-color:#7a5c1d}
+input,select{background:#0e1520;color:var(--txt);border:1px solid var(--line);
+border-radius:8px;padding:9px 10px;font-size:14px;width:100%}
+pre#console{background:#000;border-radius:8px;padding:10px;height:260px;overflow:auto;
+font-size:12px;line-height:1.45;margin:0;white-space:pre-wrap}
+.cmdrow{display:flex;gap:8px;margin-top:8px}.cmdrow input{flex:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+td.a{white-space:nowrap;text-align:right}
+.bar{height:10px;background:#0e1520;border-radius:6px;overflow:hidden;margin:4px 0 8px}
+.bar>i{display:block;height:100%;background:var(--grn)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;
+align-items:center;justify-content:center;padding:16px}
+#modal .box{background:var(--card);border:1px solid var(--line);border-radius:12px;
+max-width:640px;width:100%;padding:16px}
+#modal pre{background:#000;border-radius:8px;padding:10px;height:300px;overflow:auto;
+font-size:12px;white-space:pre-wrap}
+#tok{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;
+justify-content:center;padding:20px}#tok .box{max-width:360px;width:100%}
+.hint{color:var(--dim);font-size:13px;margin-top:8px}
+#claimurl{font-size:13px;word-break:break-all;background:#0e1520;padding:8px;
+border-radius:8px;margin-top:8px;display:none}
+a{color:var(--blu)}
+</style>
+</head>
+<body>
+<header>
+<h1>⛏️ Modded Crafters</h1>
+<span id="pill" class="pill off">...</span>
+<span id="ver" class="ver"></span>
+</header>
+
+<div id="tok"><div class="box card"><h2>🔑 Token de acesso</h2>
+<p class="hint">Cole o token mostrado pelo <code>./scripts/ui.sh url</code> (só na 1ª vez neste navegador).</p>
+<input id="tokin" placeholder="token" autocomplete="off">
+<div class="row"><button class="go" onclick="saveTok()">Entrar</button></div>
+</div></div>
+
+<main>
+<div class="card"><h2>🖥️ Servidor</h2>
+<div class="big" id="sv">...</div>
+<div class="row">
+<button class="go" id="bStart" onclick="act('/api/start','Iniciar')">▶ Iniciar</button>
+<button class="stop" onclick="task('/api/stop','Parar servidor')">⏹ Parar</button>
+<button class="warn" onclick="task('/api/restart','Reiniciar')">🔄 Reiniciar</button>
+</div></div>
+
+<div class="card"><h2>📟 Console</h2>
+<pre id="console">carregando...</pre>
+<div class="cmdrow"><input id="cmd" placeholder='comando: say Oi! / op Steve / time set day'
+onkeydown="if(event.key==='Enter')sendCmd()"><button onclick="sendCmd()">Enviar</button></div>
+<div class="row"><label class="hint"><input type="checkbox" id="auto" checked
+style="width:auto"> auto-atualizar</label></div></div>
+
+<div class="card"><h2>📱 Entrar pelo celular</h2>
+<div class="big" id="tun">...</div>
+<div class="row">
+<button onclick="tunStart()">▶ Ligar túnel</button>
+<button onclick="tunStop()">⏹ Desligar</button>
+<button onclick="tunClaim()">🔑 Nova autorização</button>
+</div>
+<div id="claimurl"></div>
+<div class="row">
+<input id="th" placeholder="host (ex: abc.at.ply.gg)" style="flex:2">
+<input id="tp" placeholder="porta" style="flex:1">
+<button onclick="tunSave()">Salvar</button>
+</div>
+<p class="hint">Minecraft → Servidores → Adicionar servidor → host + porta acima.<br>
+1ª vez: <b>Nova autorização</b> → abra o link → Claim → <b>Concluir</b> → crie o túnel
+<b>Minecraft Bedrock → 127.0.0.1:19132</b> no site → <b>Salvar</b> aqui.</p></div>
+
+<div class="card"><h2>📊 Recursos</h2><div class="big" id="res">...</div></div>
+
+<div class="card"><h2>💾 Backups</h2>
+<div class="row"><button class="go" onclick="task('/api/backup','Backup')">💾 Fazer backup agora</button></div>
+<div id="bks" style="margin-top:8px">...</div></div>
+
+<div class="card"><h2>📦 Instalar addon</h2>
+<input type="file" id="up" accept=".mcpack,.mcaddon,.zip,.mcworld">
+<label class="hint"><input type="checkbox" id="setlvl" style="width:auto">
+.mcworld: trocar o mundo do servidor por este</label>
+<div class="row"><button class="go" onclick="upload()">📤 Enviar e instalar</button></div>
+<p class="hint">Depois de instalar: Reiniciar o servidor. Conflitos aparecem no relatório.</p></div>
+
+<div class="card"><h2>🔄 Atualizar Bedrock</h2>
+<p class="hint">Para com segurança → backup → baixa a estável oficial → reinicia. Nunca Preview.</p>
+<div class="row"><button class="warn" onclick="task('/api/update','Atualizar Bedrock')">
+⬆ Atualizar agora</button></div></div>
+</main>
+
+<div id="modal"><div class="box"><h2 id="mtitle">Tarefa</h2><pre id="mout"></pre>
+<div class="row"><button onclick="closeModal()">Fechar</button></div></div></div>
+
+<script>
+let TOK=new URLSearchParams(location.search).get('token')||localStorage.getItem('mc_tok')||'';
+if(!TOK)document.getElementById('tok').style.display='flex';
+function saveTok(){TOK=document.getElementById('tokin').value.trim();
+if(TOK){localStorage.setItem('mc_tok',TOK);location.search='?token='+TOK;}}
+const api=(p,o={})=>fetch(p+(p.includes('?')?'&':'?')+'token='+encodeURIComponent(TOK),
+Object.assign({headers:{'Content-Type':'application/json'}},o));
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+async function refresh(){
+if(!TOK)return;
+try{
+const s=await(await api('/api/status')).json();
+if(s.error){document.getElementById('tok').style.display='flex';return;}
+const pill=document.getElementById('pill');
+pill.textContent=s.online?'● ONLINE':'● OFFLINE';
+pill.className='pill '+(s.online?'on':'off');
+document.getElementById('ver').textContent='Bedrock '+s.version+' • mundo '+s.world;
+document.getElementById('sv').innerHTML=
+'Mundo: <b>'+esc(s.world)+'</b> ('+esc(s.world_size)+')<br>Gamemode: '+esc(s.gamemode)+
+' • dificuldade: '+esc(s.difficulty)+'<br>Jogadores máx: '+esc(s.max_players)+
+'<br>Packs: '+s.packs_bp+' BP / '+s.packs_rp+' RP'+
+(s.proc?'<br>CPU '+esc(s.proc.cpu)+'% • MEM '+esc(s.proc.mem)+'% • up '+esc(s.proc.etime):'');
+const t=s.tunnel;
+document.getElementById('tun').innerHTML=t.host?
+'Host: <b>'+esc(t.host)+'</b><br>Porta: <b>'+esc(t.port)+'</b><br>Túnel: '+
+(t.running?'🟢 rodando':'🔴 parado')+(t.agent?'':' (agente não baixado)')+(t.has_secret?'':' (sem autorização)')
+:'(sem endereço — configure abaixo)';
+const rp=Math.round(100*(s.ram.total_mb-s.ram.avail_mb)/Math.max(s.ram.total_mb,1));
+const dp=Math.round(100*(s.disk.total_gb-s.disk.free_gb)/Math.max(s.disk.total_gb,0.1));
+document.getElementById('res').innerHTML=
+'RAM: '+(s.ram.total_mb-s.ram.avail_mb)+' / '+s.ram.total_mb+' MB<div class="bar"><i style="width:'+rp+'%"></i></div>'+
+'Disco: '+(s.disk.total_gb-s.disk.free_gb).toFixed(1)+' / '+s.disk.total_gb.toFixed(1)+' GB<div class="bar"><i style="width:'+dp+'%"></i></div>'+
+'Backups: '+s.backups_count+(s.latest_backup?' (último: '+esc(s.latest_backup)+')':'');
+await loadBk();
+}catch(e){}
+}
+async function logs(){
+if(!TOK||!document.getElementById('auto').checked)return;
+try{
+const j=await(await api('/api/logs?lines=120')).json();
+const c=document.getElementById('console');
+c.textContent=(j.lines||[]).join('\n')||'(sem saída)';
+c.scrollTop=c.scrollHeight;
+}catch(e){}
+}
+async function sendCmd(){
+const v=document.getElementById('cmd').value.trim();if(!v)return;
+document.getElementById('cmd').value='';
+const r=await(await api('/api/cmd',{method:'POST',body:JSON.stringify({command:v})})).json();
+if(!r.ok)alert(r.error||'falha');logs();
+}
+async function act(url,label){
+if(!confirm(label+' o servidor?'))return;
+const r=await(await api(url,{method:'POST',body:'{}'})).json();
+alert(r.ok?label+': OK':(r.error||'falha'));refresh();
+}
+let taskTimer=null;
+async function task(url,label){
+document.getElementById('mtitle').textContent=label;
+document.getElementById('mout').textContent='iniciando...\n';
+document.getElementById('modal').style.display='flex';
+const r=await(await api(url,{method:'POST',body:'{}'})).json();
+if(r.task===undefined){document.getElementById('mout').textContent='ERRO: '+(r.error||'?');return;}
+clearInterval(taskTimer);
+taskTimer=setInterval(async()=>{
+const t=await(await api('/api/task?id='+r.task)).json();
+const o=document.getElementById('mout');
+o.textContent=t.output||'';o.scrollTop=o.scrollHeight;
+if(!t.running){clearInterval(taskTimer);refresh();}
+},1000);
+}
+function closeModal(){clearInterval(taskTimer);
+document.getElementById('modal').style.display='none';}
+async function loadBk(){
+const j=await(await api('/api/backups')).json();
+const el=document.getElementById('bks');
+if(!j.backups||!j.backups.length){el.innerHTML='<span class="hint">nenhum ainda</span>';return;}
+let h='<table>';
+for(const b of j.backups){
+h+='<tr><td>'+esc(b.name)+'<br><span class="hint">'+esc(b.size)+' • '+esc(b.mtime)+'</span></td>'+
+'<td class="a"><button onclick="dl(\''+b.name+'\')">⬇</button> '+
+'<button onclick="rs(\''+b.name+'\')">↩</button></td></tr>';}
+el.innerHTML=h+'</table>';
+}
+function dl(n){location.href='/api/download?file='+encodeURIComponent(n)+'&token='+encodeURIComponent(TOK);}
+async function rs(n){
+if(!confirm('Restaurar '+n+'? (faz backup do atual antes)'))return;
+document.getElementById('mtitle').textContent='Restaurar';
+document.getElementById('mout').textContent='iniciando...\n';
+document.getElementById('modal').style.display='flex';
+const r=await(await api('/api/restore',{method:'POST',body:JSON.stringify({file:n})})).json();
+if(r.task===undefined){document.getElementById('mout').textContent='ERRO: '+(r.error||'?');return;}
+clearInterval(taskTimer);
+taskTimer=setInterval(async()=>{
+const t=await(await api('/api/task?id='+r.task)).json();
+const o=document.getElementById('mout');
+o.textContent=t.output||'';o.scrollTop=o.scrollHeight;
+if(!t.running){clearInterval(taskTimer);refresh();}
+},1000);
+}
+async function upload(){
+const f=document.getElementById('up').files[0];
+if(!f){alert('escolha um arquivo .mcpack/.mcaddon/.zip/.mcworld');return;}
+const fd=new FormData();fd.append('file',f);
+fd.append('set_level',document.getElementById('setlvl').checked?'1':'0');
+document.getElementById('mtitle').textContent='Instalar addon';
+document.getElementById('mout').textContent='enviando '+f.name+'...\n';
+document.getElementById('modal').style.display='flex';
+try{
+const r=await(await fetch('/api/upload?token='+encodeURIComponent(TOK),
+{method:'POST',body:fd})).json();
+if(r.task===undefined){document.getElementById('mout').textContent='ERRO: '+(r.error||'?');return;}
+clearInterval(taskTimer);
+taskTimer=setInterval(async()=>{
+const t=await(await api('/api/task?id='+r.task)).json();
+const o=document.getElementById('mout');
+o.textContent='arquivo: '+r.file+'\n'+(t.output||'');o.scrollTop=o.scrollHeight;
+if(!t.running){clearInterval(taskTimer);refresh();}
+},1000);
+}catch(e){document.getElementById('mout').textContent='ERRO no envio: '+e;}
+}
+async function tunSave(){
+const h=document.getElementById('th').value.trim(),p=document.getElementById('tp').value.trim();
+if(!h||!p){alert('preencha host e porta');return;}
+await api('/api/tunnel/save',{method:'POST',body:JSON.stringify({host:h,port:p})});
+refresh();
+}
+async function tunStart(){
+const r=await(await api('/api/tunnel/start',{method:'POST',body:'{}'})).json();
+if(!r.ok)alert(r.error||'falha');refresh();
+}
+async function tunStop(){
+await api('/api/tunnel/stop',{method:'POST',body:'{}'});refresh();
+}
+let claimCode='';
+async function tunClaim(){
+const el=document.getElementById('claimurl');
+el.style.display='block';el.textContent='gerando link...';
+const r=await(await api('/api/tunnel/claim',{method:'POST',body:'{}'})).json();
+if(!r.ok){el.textContent='ERRO: '+(r.error||'?');return;}
+claimCode=r.code;
+el.innerHTML='1) Abra e autorize: <a href="'+r.url+'" target="_blank">'+esc(r.url)+
+'</a><br>2) Depois clique: <button onclick="tunExchange()">Concluir autorização</button>';
+}
+async function tunExchange(){
+const el=document.getElementById('claimurl');
+el.textContent='aguardando você no site (até 2 min)...';
+const r=await(await api('/api/tunnel/exchange',{method:'POST',
+body:JSON.stringify({code:claimCode})})).json();
+el.textContent=r.ok?'✅ Autorizado! Agora crie o túnel Minecraft Bedrock no site e clique Ligar túnel.':'ERRO: '+(r.error||'?');
+refresh();
+}
+refresh();logs();setInterval(refresh,5000);setInterval(logs,3000);
+</script>
+</body>
+</html>

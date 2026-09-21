@@ -193,7 +193,28 @@ case "$CMD" in
     fi
     show_info
     ;;
+  download)
+    download_agent
+    ;;
+  claim-url)
+    # Não-interativo (p/ o painel web): imprime "CODIGO|URL"
+    download_agent
+    CODE="$("$PLAYIT_CLI" claim generate)" || die "playit-cli falhou."
+    URL="$("$PLAYIT_CLI" claim url "$CODE" --name modded-crafters)" || die "não gerei a URL."
+    printf '%s|%s\n' "$CODE" "$URL"
+    ;;
+  claim-finish)
+    # Não-interativo: troca o claim pelo secret (aguarda até 2 min)
+    CODE="${2:-}"
+    [ -n "$CODE" ] || die "uso: $0 claim-finish <CODIGO>"
+    SECRET="$("$PLAYIT_CLI" claim exchange "$CODE" --wait 120)" \
+      || die "claim expirou ou não foi autorizado no site."
+    printf 'secret_key = "%s"\n' "$SECRET" > "$SECRET_FILE"
+    chmod 600 "$SECRET_FILE"
+    unset SECRET
+    ok "claim concluído — secret salvo."
+    ;;
   *)
-    die "comando desconhecido: $CMD  (use: setup | start | stop | status | set)"
+    die "comando desconhecido: $CMD  (use: setup | start | stop | status | set | download | claim-url | claim-finish)"
     ;;
 esac

@@ -14,11 +14,15 @@
   // ATENÇÃO: o Codespaces só encaminha TCP/HTTP(S). O Bedrock usa UDP/19132,
   // que NÃO funciona pelo encaminhamento nativo — use ./scripts/tunnel.sh setup
   // (playit.gg) para jogar pelo celular. A porta abaixo é só documentação.
-  "forwardPorts": [19132],
+  "forwardPorts": [19132, 8080],
   "portsAttributes": {
     "19132": {
       "label": "Bedrock UDP (requer túnel playit.gg)",
       "onAutoForward": "ignore"
+    },
+    "8080": {
+      "label": "Painel web (./scripts/ui.sh start)",
+      "onAutoForward": "notify"
     }
   },
 

@@ -10,9 +10,20 @@ para ~5 jogadores, com suporte a addons pesados (Behavior + Resource Packs).
 ./scripts/start.sh            # inicia em background
 tmux attach -t mc-bedrock     # ver console ao vivo (sair: Ctrl+B, D)
 ./scripts/stop.sh             # para com segurança (salva o mundo)
+./scripts/cmd.sh 'say Oi'     # envia comando ao console (op, allowlist...)
 ./scripts/status.sh           # RAM, disco, CPU, túnel, erros
 ./scripts/selftest.sh         # bateria de testes (seguro, usa /tmp)
 ```
+
+## 🖥️ Painel web (o jeito mais simples)
+
+```bash
+./scripts/ui.sh start     # mostra o link com token — abra no navegador
+```
+
+Pelo painel dá para: iniciar/parar, ver o console ao vivo, enviar comandos,
+fazer e baixar backups, restaurar, instalar addons (upload), atualizar e
+configurar o túnel do celular com assistente. Para desligar: `./scripts/ui.sh stop`.
 
 ## 🌐 Entrar pelo celular (Bedrock → Servidores → Adicionar servidor)
 
@@ -47,6 +58,7 @@ O instalador lê o `manifest.json` real (UUID + versão), registra no mundo e
 
 ```bash
 ./scripts/backup.sh           # backups/world-AAAA-MM-DD-HHMM.tar.gz (mantém 5)
+./scripts/restore.sh --list   # lista backups p/ restaurar
 ./scripts/update.sh           # para → backup → atualiza estável → reinicia
 ```
 
